@@ -1,3 +1,7 @@
+# NEW PACKAGE + NODE:
+``` ros2 pkg create --build-type ament_cmake --node-name <node_name> <package_name> ```
+warning: no `-` in node/package names, only `_`
+
 # DC DRIVER NODE
 usage: 
 ``` source /opt/ros/galactic/setup.bash```
