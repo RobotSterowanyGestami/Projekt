@@ -12,7 +12,7 @@ from std_msgs.msg import Int8
 class MotorDriver(Node):
 
     def __init__(self):
-        super().__init__('motor_driver')
+        super().__init__('hal_motor_driver')
         #self.publisher_ = self.create_publisher(Int, 'topic', 10)
         self.subscriber_ = self.create_subscription(Int8, 'motor_speed', self.motor_speed_callback, 10)
         GPIO.setmode(GPIO.BCM)

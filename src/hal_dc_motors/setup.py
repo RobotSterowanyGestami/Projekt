@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'motor_driver = hal_dc_motors.motor_driver:main'
+            'hal_motor_driver = hal_dc_motors.hal_motor_driver:main'
         ],
     },
 )
