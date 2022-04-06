@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'hal_ultrasonic_sensor_driver = hal_ultrasonic_sensors.hal_ultrasonic_sensor_driver:main'
         ],
     },
 )
