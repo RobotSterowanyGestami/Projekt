@@ -20,12 +20,13 @@ OUTPIN=17
 class Sensor(Node):
 
     def __init__(self):
-        super().__init__('hal_front_ultrasonic_sensor_driver')
+        super().__init__('hal_ultrasonic_sensor_driver')
         self.publisher_ = self.create_publisher(Float32, 'front_right_distance', 10)
         # timer_period = 0.001 
         # self.timer = self.create_timer(timer_period, self.timer_callback)
         # self.i = 0
         self.echo1=False
+        self.echo1_stop=False
         gpio.setmode(gpio.BCM)
         gpio.setup(PIN1,gpio.IN)
         gpio.setup(PIN2,gpio.IN)
@@ -34,6 +35,7 @@ class Sensor(Node):
         gpio.setup(OUTPIN,gpio.OUT)
         gpio.output(OUTPIN, gpio.LOW)
         gpio.add_event_detect(PIN1,gpio.RISING,self.callback1)
+        gpio.add_event_detect(PIN1,gpio.FALLING,self.callback1_off)
         self.start_time=None
         self.stop_time=None
         self.start_flag=False
@@ -47,6 +49,9 @@ class Sensor(Node):
     def callback1(self,_):
         self.get_logger().info("callback")
         self.echo1=True
+
+    def callback1_off(self,_):
+        self.echo1_stop=True
 
     # def run(self):
     #     while rclpy.ok():
@@ -75,14 +80,15 @@ def main(args=None):
         if sensor.start_flag==False:
             sensor.start_flag=True
             gpio.output(OUTPIN,gpio.HIGH)
-            sensor.start_time=time.time()
             time.sleep(0.00001)
             gpio.output(OUTPIN,gpio.LOW)
         if sensor.echo1==True:
-            sensor.stop_time=time.time()
+            sensor.start_time=time.time_ns()
+        if sensor.echo1_stop==True:
+            sensor.stop_time=time.time_ns()
         #if sensor.echo1==True and sensor.start_flag==True:
             msg = Float32()
-            msg.data = float((sensor.stop_time-sensor.start_time)*17000)
+            msg.data = float(((sensor.stop_time-sensor.start_time)/1000)*34/1000/2)
             # msg.data=round(msg.data,3)
             sensor.get_logger().info('Publishing: %f'% msg.data)
             sensor.publisher_.publish(msg)
