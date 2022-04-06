@@ -72,7 +72,7 @@ def main(args=None):
 
     while rclpy.ok():
         if sensor.start_flag==False:
-            sensor.start_flag==True
+            sensor.start_flag=True
             sensor.start_time=time.time()
             gpio.output(OUTPIN,gpio.HIGH)
             gpio.output(OUTPIN,gpio.LOW)
