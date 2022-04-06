@@ -19,14 +19,13 @@ OUTPIN=17
 
 class Sensor(Node):
 
-    def __init__(self, args=None):
+    def __init__(self):
         super().__init__('hal_front_ultrasonic_sensor_driver')
         self.publisher_ = self.create_publisher(Float32, 'front_right_distance', 10)
         timer_period = 0.001 
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
         self.echo1=False
-        self.args=args
         gpio.setmode(gpio.BCM)
         gpio.setup(PIN1,gpio.IN)
         gpio.setup(PIN2,gpio.IN)
@@ -38,7 +37,6 @@ class Sensor(Node):
         self.start_time=None
         self.stop_time=None
         self.start_flag=False
-        rclpy.init(args=self.args)
 
     def timer_callback(self):
         msg = Float32()
