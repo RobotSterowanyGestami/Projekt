@@ -75,6 +75,7 @@ def main(args=None):
             sensor.start_flag=True
             sensor.start_time=time.time()
             gpio.output(OUTPIN,gpio.HIGH)
+            time.sleep(0.00001)
             gpio.output(OUTPIN,gpio.LOW)
         if sensor.echo1==True:
             sensor.stop_time=time.time()
