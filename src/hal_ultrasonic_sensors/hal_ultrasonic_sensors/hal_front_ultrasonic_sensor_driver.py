@@ -49,18 +49,18 @@ class Sensor(Node):
     def callback1(self):
         self.echo1=True
 
-    def run(self):
-        while rclpy.ok():
-            if self.start_flag==False:
-                self.start_flag==True
-                start_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-                gpio.output(OUTPIN,gpio.HIGH)
-                gpio.output(OUTPIN,gpio.LOW)
-            if self.echo1==True:
-                self.stop_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-            if self.echo1==True:
-                rclpy.spin_once()
-        self.destroy
+    # def run(self):
+    #     while rclpy.ok():
+    #         if self.start_flag==False:
+    #             self.start_flag==True
+    #             self.start_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    #             gpio.output(OUTPIN,gpio.HIGH)
+    #             gpio.output(OUTPIN,gpio.LOW)
+    #         if self.echo1==True:
+    #             self.stop_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    #         if self.echo1==True:
+    #             rclpy.spin_once()
+    #     self.destroy
 
                 
 
