@@ -45,6 +45,7 @@ class Sensor(Node):
     #     self.i += 1
 
     def callback1(self,_):
+        self.get_logger().info("callback")
         self.echo1=True
 
     # def run(self):
@@ -73,8 +74,8 @@ def main(args=None):
     while rclpy.ok():
         if sensor.start_flag==False:
             sensor.start_flag=True
-            sensor.start_time=time.time()
             gpio.output(OUTPIN,gpio.HIGH)
+            sensor.start_time=time.time()
             time.sleep(0.00001)
             gpio.output(OUTPIN,gpio.LOW)
         if sensor.echo1==True:
