@@ -80,7 +80,8 @@ def main(args=None):
             sensor.stop_time=time.time()
         #if sensor.echo1==True and sensor.start_flag==True:
             msg = Float32()
-            msg.data = (sensor.stop_time-sensor.start_time)*17000
+            msg.data = float((sensor.stop_time-sensor.start_time)*17000)
+            msg.data=round(msg.data,3)
             sensor.publisher_.publish(msg)
             rclpy.spin_once(sensor)
             sensor.echo1=False
