@@ -44,7 +44,7 @@ class Sensor(Node):
         self.publisher_.publish(msg)
         self.i += 1
 
-    def callback1(self):
+    def callback1(self,_):
         self.echo1=True
 
     # def run(self):
