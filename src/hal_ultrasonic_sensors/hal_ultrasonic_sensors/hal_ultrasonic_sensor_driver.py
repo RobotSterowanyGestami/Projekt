@@ -73,11 +73,11 @@ def main(args=None):
     while rclpy.ok():
         if sensor.start_flag==False:
             sensor.start_flag==True
-            sensor.start_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+            sensor.start_time=time.time()
             gpio.output(OUTPIN,gpio.HIGH)
             gpio.output(OUTPIN,gpio.LOW)
         if sensor.echo1==True:
-            sensor.stop_time=time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+            sensor.stop_time=time.time()
         #if sensor.echo1==True and sensor.start_flag==True:
             msg = Float32()
             msg.data = (sensor.stop_time-sensor.start_time)*17000
