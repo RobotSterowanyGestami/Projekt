@@ -9,9 +9,15 @@ from std_msgs.msg import Float32
 GPIO.setmode(GPIO.BCM)
  
 #set GPIO Pins
-GPIO_TRIGGER = 17
-GPIO_ECHO_1 = 5
+GPIO_TRIGGER_1 = 23
+GPIO_ECHO_1 = 24
+GPIO_TRIGGER_2 = 5
 GPIO_ECHO_2 = 6
+GPIO_TRIGGER_3 = 0
+GPIO_ECHO_3 = 25
+GPIO_TRIGGER_4 = 2
+GPIO_ECHO_4 = 3
+
  
 #set GPIO direction (IN / OUT)
 
@@ -23,9 +29,14 @@ class UltrasoundSensorDriver(Node):
         super().__init__('hal_ultrasound_sensor_driver')
         self.front_right_publisher = self. create_publisher(Float32, 'front_right_distance', 10)
         self.front_left_publisher = self.create_publisher(Float32, 'front_left_distance', 10)
-        GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
+        GPIO.setup(GPIO_TRIGGER_1, GPIO.OUT)
         GPIO.setup(GPIO_ECHO_1, GPIO.IN)
+        GPIO.setup(GPIO_TRIGGER_2, GPIO.OUT)
         GPIO.setup(GPIO_ECHO_2, GPIO.IN)
+        GPIO.setup(GPIO_TRIGGER_3, GPIO.OUT)
+        GPIO.setup(GPIO_ECHO_3, GPIO.IN)
+        GPIO.setup(GPIO_TRIGGER_4, GPIO.OUT)
+        GPIO.setup(GPIO_ECHO_4, GPIO.IN)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.run)
         self.i = 0
@@ -59,12 +70,18 @@ class UltrasoundSensorDriver(Node):
     
     def run(self):
         msg = Float32()
-        msg.data = self.distance(GPIO_TRIGGER, GPIO_ECHO_1)
+        msg.data = self.distance(GPIO_TRIGGER_1, GPIO_ECHO_1)
         self.front_right_publisher.publish(msg)
-        self.get_logger().info('Publishing right: "%f"' % msg.data)
-        msg.data = self.distance(GPIO_TRIGGER, GPIO_ECHO_2)
+        self.get_logger().info('Publishing front right: "%f"' % msg.data)
+        msg.data = self.distance(GPIO_TRIGGER_2, GPIO_ECHO_2)
         self.front_left_publisher.publish(msg)
-        self.get_logger().info('Publishing left: "%f"' % msg.data)
+        self.get_logger().info('Publishing rear right: "%f"' % msg.data)
+        msg.data = self.distance(GPIO_TRIGGER_3, GPIO_ECHO_3)
+        self.front_left_publisher.publish(msg)
+        self.get_logger().info('Publishing rear left: "%f"' % msg.data)
+        msg.data = self.distance(GPIO_TRIGGER_4, GPIO_ECHO_4)
+        self.front_left_publisher.publish(msg)
+        self.get_logger().info('Publishing front left: "%f"' % msg.data)
         
         
 
