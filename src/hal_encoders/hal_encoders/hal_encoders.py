@@ -6,7 +6,6 @@ counter = 10
 Enc_A = 4
 Enc_B = 1
 
-
 def init():
     print("Rotary Encoder Test Program")
     GPIO.setwarnings(True)
@@ -14,6 +13,7 @@ def init():
     GPIO.setup(Enc_A, GPIO.IN)
     GPIO.setup(Enc_B, GPIO.IN)
     GPIO.add_event_detect(Enc_A, GPIO.RISING, callback=rotation_decode, bouncetime=10)
+    
     return
 
 
