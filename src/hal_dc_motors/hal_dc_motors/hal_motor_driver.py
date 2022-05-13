@@ -16,13 +16,13 @@ class MotorDriver(Node):
         #self.publisher_ = self.create_publisher(Int, 'topic', 10)
         self.subscriber_ = self.create_subscription(Int8, 'motor_speed', self.motor_speed_callback, 10)
         GPIO.setmode(GPIO.BCM)
-        self.PWM_PIN = 4
+        self.PWM_PIN = 13
         GPIO.setup(self.PWM_PIN, GPIO.OUT)
         self.pwm = GPIO.PWM(self.PWM_PIN, 100)
         self.speed = 0
         self.pwm.start(0)
-        self.MotorA = 9
-        self.MotorB = 10
+        self.MotorA = 8
+        self.MotorB = 7
         GPIO.setup(self.MotorA, GPIO.OUT)
         GPIO.setup(self.MotorB, GPIO.OUT)
 
