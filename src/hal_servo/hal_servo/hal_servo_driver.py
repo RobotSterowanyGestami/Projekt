@@ -2,12 +2,12 @@ import RPi.GPIO as GPIO
 import time
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int8
+from std_msgs.msg import Int16
 
 class ServoDriver(Node):
     def __init__(self):
         super().__init__('hal_servo_driver')
-        self.subscriber = self.create_subscription(Int8, 'servo_angle', self.servo_angle_callback, 10)
+        self.subscriber = self.create_subscription(Int16, 'servo_angle', self.servo_angle_callback, 10)
         self.PWM_PIN = 12
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.PWM_PIN, GPIO.OUT)
@@ -16,7 +16,7 @@ class ServoDriver(Node):
         self.pwm.start(0)
         
     def servo_angle_callback(self, msg):
-        self.angle = (msg.data / 180) * 11 + 1.5
+        self.angle = (msg.data / 180) * 9 + 3
         self.pwm.ChangeDutyCycle(self.angle)
         
 def main(args=None):
