@@ -4,6 +4,7 @@ import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
+from rclpy.executors import MultiThreadedExecutor
  
 #GPIO Mode (BOARD / BCM)
 GPIO.setmode(GPIO.BCM)
@@ -25,42 +26,30 @@ GPIO_ECHO_4 = 3
 
 class UltrasoundSensorDriver(Node):
     
-    def __init__(self):
+    def __init__(self, echo, trigger, name):
         super().__init__('hal_ultrasound_sensor_driver')
-        self.front_right_publisher = self. create_publisher(Float32, 'front_right_distance', 10)
-        self.front_left_publisher = self.create_publisher(Float32, 'front_left_distance', 10)
-        GPIO.setup(GPIO_TRIGGER_1, GPIO.OUT)
-        GPIO.setup(GPIO_ECHO_1, GPIO.IN)
-        GPIO.setup(GPIO_TRIGGER_2, GPIO.OUT)
-        GPIO.setup(GPIO_ECHO_2, GPIO.IN)
-        GPIO.setup(GPIO_TRIGGER_3, GPIO.OUT)
-        GPIO.setup(GPIO_ECHO_3, GPIO.IN)
-        GPIO.setup(GPIO_TRIGGER_4, GPIO.OUT)
-        GPIO.setup(GPIO_ECHO_4, GPIO.IN)
-        timer_period = 0.5  # seconds
+        self.publisher = self.create_publisher(Float32, name, 10)
+        GPIO.setup(trigger, GPIO.OUT)
+        GPIO.setup(echo, GPIO.IN)
+        self.trigger = trigger
+        self.echo = echo
+        timer_period = 0.25
         self.timer = self.create_timer(timer_period, self.run)
-        self.i = 0
         
     def distance(self, trigger, echo):
-        # set Trigger to HIGH
         GPIO.output(trigger, True)
-     
-        # set Trigger after 0.01ms to LOW
         time.sleep(0.00001)
         GPIO.output(trigger, False)
      
         StartTime = time.time()
         StopTime = time.time()
      
-        # save StartTime
         while GPIO.input(echo) == 0:
             StartTime = time.time()
      
-        # save time of arrival
         while GPIO.input(echo) == 1:
             StopTime = time.time()
      
-        # time difference between start and arrival
         TimeElapsed = StopTime - StartTime
         # multiply with the sonic speed (34300 cm/s)
         # and divide by 2, because there and back
@@ -70,33 +59,32 @@ class UltrasoundSensorDriver(Node):
     
     def run(self):
         msg = Float32()
-        msg.data = self.distance(GPIO_TRIGGER_1, GPIO_ECHO_1)
-        self.front_right_publisher.publish(msg)
-        self.get_logger().info('Publishing front right: "%f"' % msg.data)
-        msg.data = self.distance(GPIO_TRIGGER_2, GPIO_ECHO_2)
-        self.front_left_publisher.publish(msg)
-        self.get_logger().info('Publishing rear right: "%f"' % msg.data)
-        msg.data = self.distance(GPIO_TRIGGER_3, GPIO_ECHO_3)
-        self.front_left_publisher.publish(msg)
-        self.get_logger().info('Publishing rear left: "%f"' % msg.data)
-        msg.data = self.distance(GPIO_TRIGGER_4, GPIO_ECHO_4)
-        self.front_left_publisher.publish(msg)
-        self.get_logger().info('Publishing front left: "%f"' % msg.data)
-        
-        
+        msg.data = self.distance(self.trigger, self.echo)        
 
 
 def main(args=None):
     rclpy.init(args=args)
     
-    ultrasound_sensor_driver = UltrasoundSensorDriver()
+    front_right_ultrasound_sensor_driver = UltrasoundSensorDriver(GPIO_ECHO_1, GPIO_TRIGGER_1, 'front_right_distance')
+    rear_right_ultrasound_sensor_driver = UltrasoundSensorDriver(GPIO_ECHO_2, GPIO_TRIGGER_2, 'rear_right_distance')
+    rear_left_ultrasound_sensor_driver = UltrasoundSensorDriver(GPIO_ECHO_3, GPIO_TRIGGER_3, 'rear_left_distance')
+    front_left_ultrasound_sensor_driver = UltrasoundSensorDriver(GPIO_ECHO_4, GPIO_TRIGGER_4, 'front_left_distance')
     
+    
+    executor = MultiThreadedExecutor(num_threads=4)
+    executor.add_node(front_right_ultrasound_sensor_driver)
+    executor.add_node(rear_right_ultrasound_sensor_driver)
+    executor.add_node(rear_left_ultrasound_sensor_driver)
+    executor.add_node(front_left_ultrasound_sensor_driver)
+
     while rclpy.ok():
-        rclpy.spin_once(ultrasound_sensor_driver)
-        time.sleep(1)
+        executor.spin_once()
 
         
-    ultrasound_sensor_driver.destron_node()
+    front_right_ultrasound_sensor_driver.destroy_node()
+    rear_right_ultrasound_sensor_driver.destroy_node()
+    rear_left_ultrasound_sensor_driver.destroy_node()
+    front_left_ultrasound_sensor_driver.destroy_node()
     rclpy.shutdown()
     GPIO.cleanup()
     
