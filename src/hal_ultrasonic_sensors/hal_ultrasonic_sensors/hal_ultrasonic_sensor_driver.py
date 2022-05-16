@@ -5,10 +5,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
 from rclpy.executors import MultiThreadedExecutor
- 
-#GPIO Mode (BOARD / BCM)
-GPIO.setmode(GPIO.BCM)
- 
+  
 #set GPIO Pins
 GPIO_TRIGGER_1 = 23
 GPIO_ECHO_1 = 24
@@ -19,16 +16,13 @@ GPIO_ECHO_3 = 25
 GPIO_TRIGGER_4 = 2
 GPIO_ECHO_4 = 3
 
- 
-#set GPIO direction (IN / OUT)
-
-
 
 class UltrasoundSensorDriver(Node):
     
     def __init__(self, echo, trigger, name):
         super().__init__('hal_ultrasound_sensor_driver')
         self.publisher = self.create_publisher(Float32, name, 10)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(trigger, GPIO.OUT)
         GPIO.setup(echo, GPIO.IN)
         self.trigger = trigger
