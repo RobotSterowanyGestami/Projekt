@@ -21,14 +21,15 @@ class UltrasoundSensorDriver(Node):
     
     def __init__(self, echo, trigger, name):
         super().__init__('hal_ultrasound_sensor_driver')
-        self.publisher = self.create_publisher(Float32, name, 10)
+        self.name = name
+        self.publisher = self.create_publisher(Float32, self.name, 10)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(trigger, GPIO.OUT)
         GPIO.setup(echo, GPIO.IN)
         self.trigger = trigger
         self.echo = echo
-        timer_period = 0.25
-        self.timer = self.create_timer(timer_period, self.run)
+        self.timer_period = 0.25
+        self.timer = self.create_timer(self.timer_period, self.run)
         
     def distance(self, trigger, echo):
         GPIO.output(trigger, True)
@@ -39,6 +40,8 @@ class UltrasoundSensorDriver(Node):
         StopTime = time.time()
      
         while GPIO.input(echo) == 0:
+            if time.time() - StopTime > self.timer_period:
+                break
             StartTime = time.time()
      
         while GPIO.input(echo) == 1:
@@ -53,7 +56,11 @@ class UltrasoundSensorDriver(Node):
     
     def run(self):
         msg = Float32()
-        msg.data = self.distance(self.trigger, self.echo)        
+        msg.data = self.distance(self.trigger, self.echo)
+        #msg.data = 0.1
+        self.publisher.publish(msg)
+        self.get_logger().info('%s' % self.name)
+
 
 
 def main(args=None):
