@@ -13,7 +13,7 @@ in `home/.../Raspberry`:
 
 ``` colcon build```
 
-``` . install/setup.bash```
+``` source install/setup.bash```
 
 # DC DRIVER NODE
 
