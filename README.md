@@ -35,5 +35,12 @@ usage:
 
 ``` ros2 run hal_encoders hal_encoder_driver ```
 
+# NETWORKING
+
+conenct to wifi via terminal: ```sudo nmcli dev wifi connect <network-ssid> password <network-password>```
+
+ssh: ```ssh projekt@<ip> -X```
+
+
 
 
