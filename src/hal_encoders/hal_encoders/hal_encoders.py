@@ -1,68 +1,88 @@
-import RPi.GPIO as GPIO
-from time import sleep
+import pigpio
+import time
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int8
+from std_msgs.msg import Float32
+from rclpy.executors import MultiThreadedExecutor
+
+Enc_A_1 = 4
+Enc_B_1 = 1
+Enc_A_2 = 16
+Enc_B_2 = 17
+num_of_ticks_per_round = 960
+wheel = 21 #cm
 
 class EncoderDriver(Node):
-    def __init__(self):
+    def __init__(self, gpioA, gpioB, name):
         super().__init__('hal_encoder_driver')
-        self.publisher = self.create_publisher(Int8, 'left_motor_speed', 10)
-        GPIO.setmode(GPIO.BCM)
-        self.Enc_A_1 = 4
-        self.Enc_B_1 = 1
-        self.Enc_A_2 = 20
-        self.Enc_B_2 = 21
-        GPIO.setup(self.Enc_A_1, GPIO.IN)
-        GPIO.setup(self.Enc_B_1, GPIO.IN)
-        GPIO.setup(self.Enc_A_2, GPIO.IN)
-        GPIO.setup(self.Enc_B_2, GPIO.IN)
-        self.counter_1 = 0
-        self.counter_2 = 0
-        GPIO.add_event_detect(self.Enc_A_1, GPIO.RISING, callback=rotation_decode_1, bouncetime=5)
-        GPIO.add_event_detect(self.Enc_A_2, GPIO.RISING, callback=rotation_decode_2, bouncetime=5)
+        self.publisher = self.create_publisher(Float32, name, 10)
+        self.levA = 0
+        self.levB = 0
+        self.gpioA = gpioA
+        self.gpioB = gpioB
+        self.lastGpio = None
+        self.pi = pigpio.pi()
+        self.counter = 0
+        self.name = name
+        self.pi.set_mode(self.gpioA, pigpio.PUD_UP)
+        self.pi.set_mode(self.gpioB, pigpio.PUD_UP)
+        self.pi.set_pull_up_down(self.gpioA, pigpio.PUD_UP)
+        self.pi.set_pull_up_down(self.gpioB, pigpio.PUD_UP)
+        self.callbackA = self.pi.callback(self.gpioA, pigpio.EITHER_EDGE, self._pulse)
+        self.callbackB = self.pi.callback(self.gpioB, pigpio.EITHER_EDGE, self._pulse)
+        self.StartTime = time.time_ns()
+        self.StopTime = time.time_ns()
+        self.timer_period = 0.1
+        self.timer = self.create_timer(self.timer_period, self.run)
         
-    def rotation_decode_1(self, Enc_A):
-        self.counter_1 +=1
-        
-    def totation_decode_2(self, Enc_A):
-        self.counter_2 +=1
-        
-        
-    
+    def _pulse(self, gpio, level, tick):
 
-def rotation_decode(Enc_A):
-    global counter
-    sleep(0.002)
-    Switch_A = GPIO.input(Enc_A)
-    Switch_B = GPIO.input(Enc_B)
+      if gpio == self.gpioA:
+         self.levA = level
+      else:
+         self.levB = level;
 
-    if (Switch_A == 1) and (Switch_B == 0):
-        counter += 1
-        print("direction -> ", counter)
-        while Switch_B == 0:
-            Switch_B = GPIO.input(Enc_B)
-        while Switch_B == 1:
-            Switch_B = GPIO.input(Enc_B)
-        return
+      if gpio != self.lastGpio: # debounce
+         self.lastGpio = gpio
 
-    elif (Switch_A == 1) and (Switch_B == 1):
-        counter -= 1
-        print("direction <- ", counter)
-        while Switch_A == 1:
-            Switch_A = GPIO.input(Enc_A)
-        return
-    else:
-        return
+         if   gpio == self.gpioA and level == 1:
+            if self.levB == 1:
+               self.rotation_decode_1(1)
+         elif gpio == self.gpioB and level == 1:
+            if self.levA == 1:
+               self.rotation_decode_1(-1)
+        
+    def rotation_decode_1(self, way):
+        self.StopTime=time.time_ns()
+        self.counter += way
+        self.StartTime=time.time_ns()
+        #print("{} pos={}".format(self.name,self.counter))
+        
+    def run(self):
+        msg = Float32()
+        msg.data = float((self.counter/num_of_ticks_per_round *wheel)/(self.timer_period))
+        if msg.data < 0 :
+            msg.data = -msg.data
+        #print("msg.data = {}".format(self.StartTime - self.StopTime))
+        self.publisher.publish(msg)
+        self.counter = 0
+        self.get_logger().info('%f' % msg.data)
 
 
 def main(args=None):
     rclpy.init(args=args)
     
-    node = EncoderDriver()
+    left_node = EncoderDriver(Enc_A_2, Enc_B_2, 'left_encoder')
+    right_node = EncoderDriver(Enc_A_1, Enc_B_1, 'right_encoder')
+    executor = MultiThreadedExecutor(num_threads=2)
+    executor.add_node(left_node)
+    executor.add_node(right_node)
+    
     while(rclpy.ok()):
-        rclpy.spin_once(node)
-    node.destroy_node()
+        executor.spin_once()
+    left_node.destroy_node()
+    right_node.destroy_node()
+
     rclpy.shutdown()
 
 
