@@ -8,6 +8,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int8.hpp"
+#include "std_msgs/msg/int16.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
 
@@ -67,6 +68,8 @@ class Main : public Node
     	motor = new My_publisher<Int8>(this,"motor_speed");
     	servo = new My_publisher<Int16>(this,"servo_angle");
     	
+    	motor_speed.data = 0;
+    	servo_angle.data = 90;
     	
     	left_encoder = new Subscriber<Float32>(this,"left_encoder");
 		 	 
@@ -75,7 +78,7 @@ class Main : public Node
       		bind(&Main::timer_callback, this)
       		);
     }
-
+	
   private:
   	// Loop
     void timer_callback()
@@ -84,22 +87,21 @@ class Main : public Node
    		
     	if( poll(&mypoll,1,0) ){
     		
-    		if( !scanf("%d,%d",&(motor_speed.data),&(this->my_servo_angle.data)) )
-				scanf(",%d",&(my_servo_angle.data) );
+    		if( !scanf("%d,%d",&(motor_speed.data),&(servo_angle.data)) )
+				scanf(",%d",&(servo_angle.data) );
 		
 //    		scanf("%d",&(motor_speed.data));
     		scanf("%*[^\n]");
     		
     		motor->publish(motor_speed);
-    		servo->publish(my_servo_angle);
+    		servo->publish(servo_angle);
     	}
     }
     
-    Int8 motor_speed;
-    
     size_t count_;
-    Int8 motor_speed;
-	Int16 my_servo_angle;
+    
+	Int8 motor_speed;
+	Int16 servo_angle;
     
     TimerBase::SharedPtr timer;
     
