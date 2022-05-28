@@ -86,15 +86,27 @@ class Main : public Node
    		struct pollfd mypoll = { 0, POLLIN }; 
    		
     	if( poll(&mypoll,1,0) ){
-    		
-    		if( !scanf("%d,%d",&(motor_speed.data),&(servo_angle.data)) )
-				scanf(",%d",&(servo_angle.data) );
-		
-//    		scanf("%d",&(motor_speed.data));
+			
+   			int d1,d2;
+			
+			int tmp = scanf("%d,%d",&d1,&d2);
+			// printf("%d\n",tmp);
+			
+			switch(tmp){
+				case 0:
+					scanf(",%d",&d2 );
+					servo_angle.data = d2;
+					break;
+				case 2:
+					servo_angle.data = d2;
+				case 1:
+					motor_speed.data = d1;
+			}
+			
     		scanf("%*[^\n]");
     		
-    		motor->publish(motor_speed);
-    		servo->publish(servo_angle);
+    		motor->publish(Int8(motor_speed));
+    		servo->publish(Int16(servo_angle));
     	}
     }
     
