@@ -11,11 +11,9 @@
 #include "std_msgs/msg/int16.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
-#include "sensor_msgs/msg/imu.hpp"
 
 using namespace std::chrono_literals;
 using namespace std_msgs::msg;
-using namespace sensor_msgs::msg;
 using namespace std;
 using namespace std::placeholders;
 using namespace rclcpp;
@@ -48,7 +46,7 @@ class Subscriber{
  	}
  	
  	void callback(const T &msg){
- 		this->msg = msg;
+ 		this->msg.data = msg.data;
  	}
  	
  	T get_msg(){
@@ -70,16 +68,13 @@ class Main : public Node
     	motor = new My_publisher<Int8>(this,"motor_speed");
     	servo = new My_publisher<Int16>(this,"servo_angle");
     	
-    	start = false;
-    	
     	motor_speed.data = 0;
     	servo_angle.data = 90;
     	
     	left_encoder = new Subscriber<Float32>(this,"left_encoder");
-    	imu = new Subscriber<Imu>(this,"hal_imu");
 		 	 
 		timer = this->create_wall_timer(
-      		100ms,
+      		500ms,
       		bind(&Main::timer_callback, this)
       		);
     }
@@ -88,81 +83,42 @@ class Main : public Node
   	// Loop
     void timer_callback()
     {
-    	float vx,vy,vz, acc;
-    	vx = imu->get_msg().linear_acceleration.x;
-    	vy = imu->get_msg().linear_acceleration.y;
-    	vz = imu->get_msg().linear_acceleration.z;
-    	
-    	acc = vx*vx + vy*vy + vz*vz;
-    	
-    	vx = imu->get_msg().angular_velocity.x;
-    	vy = imu->get_msg().angular_velocity.y;
-    	vz = imu->get_msg().angular_velocity.z;
-    	
-    	float acu = 0.05;
-    	
-    	if( vx < acu and vx > -acu )
-    		vx = 0;
-    	if( vy < acu and vy > -acu )
-    		vy = 0;
-    	if( vz < acu and vz > -acu )
-    		vz = 0;
+   		struct pollfd mypoll = { 0, POLLIN }; 
+   		
+    	if( poll(&mypoll,1,0) ){
+			
+   			int d1,d2;
+			
+			int tmp = scanf("%d,%d",&d1,&d2);
+			// printf("%d\n",tmp);
+			
+			switch(tmp){
+				case 0:
+					scanf(",%d",&d2 );
+					servo_angle.data = d2+90;
+					break;
+				case 2:
+					servo_angle.data = d2+90;
+				case 1:
+					motor_speed.data = d1;
+			}
+			
+    		scanf("%*[^\n]");
     		
-    	
-    	x += vx; y += vy; z += vz;
-
-    	//printf("acc: %0.3f\nx: %0.3f, y: %0.3f, z: %0.3f\n",acc,x,y,z);
-    	if( acc > 1500 ){
-    		start = true;
-    		x = 0; y = 0; z = 0;
-    		printf("-----------------\n");
-    		printf("-----------------\n");
+    		motor->publish(Int8(motor_speed));
+    		servo->publish(Int16(servo_angle));
     	}
-    	printf("x: %0.3f, y: %0.3f\n",x,y);
-    	
-    	
-    	if( x > 13 )
-    		motor_speed.data = -100;
-    	if( x < 3 and x > -5 )
-    		motor_speed.data = 0;
-    	if(  x < -5 and x > -15  )
-    		motor_speed.data = (-x-5)*7 + 30;
-    	if( x < 13 and x > 3 )
-    		motor_speed.data = -(x-3)*7 - 30;
-    	if( x < -15 )
-    		motor_speed.data = 100;
-    		
-    	servo_angle.data = -y*3+90;
-    	
-    	if( !start )
-    	{
-    		motor_speed.data = 0;
-    		servo_angle.data = 90;
-    	}
-    	
-    	printf("mot: %d, serv: %d\n",motor_speed.data,servo_angle.data);
-    		    	
-    	// 30 - 100
-		motor->publish(Int8(motor_speed));
-
-		// 45-135
-		servo->publish(Int16(servo_angle));
     }
     
     size_t count_;
     
 	Int8 motor_speed;
 	Int16 servo_angle;
-	
-	bool start;
-	float x,y,z;
     
     TimerBase::SharedPtr timer;
     
     My_publisher<Int8>* motor;
     My_publisher<Int16>* servo;
-    
-    Subscriber<Imu>* imu; 
     Subscriber<Float32>* left_encoder;
 };
 
