@@ -1,3 +1,10 @@
+# LAUNCH MOBILE ROBOT 
+``` ros2 launch drive_to_point launch_all.launch.py ```
+change pid gains in src/control/src/pid.cpp
+
+
+
+
 # NEW PACKAGE + NODE IN C++:
 ``` ros2 pkg create --build-type ament_cmake --node-name <node_name> <package_name> ```
 

@@ -10,10 +10,10 @@ Enc_B_1 = 1
 Enc_A_2 = 16
 Enc_B_2 = 17
 num_of_ticks_per_round = 960
-wheel = 21 #cm
+wheel = 0.21 #m
 
 class EncoderDriver(Node):
-    def __init__(self, gpioA, gpioB, name):
+    def __init__(self, gpioA, gpioB, name, direction):
         super().__init__('hal_encoder_driver')
         self.publisher = self.create_publisher(Float32, name, 10)
         self.levA = 0
@@ -34,6 +34,7 @@ class EncoderDriver(Node):
         self.StopTime = time.time_ns()
         self.timer_period = 0.1
         self.timer = self.create_timer(self.timer_period, self.run)
+        self.direction = direction
         
     def _pulse(self, gpio, level, tick):
 
@@ -56,24 +57,20 @@ class EncoderDriver(Node):
         self.StopTime=time.time_ns()
         self.counter += way
         self.StartTime=time.time_ns()
-        #print("{} pos={}".format(self.name,self.counter))
         
     def run(self):
         msg = Float32()
         msg.data = float((self.counter/num_of_ticks_per_round *wheel)/(self.timer_period))
-        if msg.data < 0 :
-            msg.data = -msg.data
-        #print("msg.data = {}".format(self.StartTime - self.StopTime))
+        msg.data = self.direction*msg.data
         self.publisher.publish(msg)
         self.counter = 0
-        self.get_logger().info('%f' % msg.data)
 
 
 def main(args=None):
     rclpy.init(args=args)
     
-    left_node = EncoderDriver(Enc_A_2, Enc_B_2, 'left_encoder')
-    right_node = EncoderDriver(Enc_A_1, Enc_B_1, 'right_encoder')
+    left_node = EncoderDriver(Enc_A_1, Enc_B_1, 'left_encoder', -1)
+    right_node = EncoderDriver(Enc_A_2, Enc_B_2, 'right_encoder', 1)
     executor = MultiThreadedExecutor(num_threads=2)
     executor.add_node(left_node)
     executor.add_node(right_node)
