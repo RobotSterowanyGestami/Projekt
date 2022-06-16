@@ -3,7 +3,7 @@
 change pid gains in src/control/src/pid.cpp
 
 # SET PID GAINS
-Use plotjuggler: 'sudo apt install ros-galactic-plotjuggler-ros`
+Use plotjuggler: `sudo apt install ros-galactic-plotjuggler-ros`
 In plotjuggler select Streaming: ROS2 Subscriber/ROS Topic Subscriber
 Click `Start` - then select these topics in the pop-up window:
 /motor_speed
